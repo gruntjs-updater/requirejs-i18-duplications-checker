@@ -97,7 +97,7 @@ module.exports = function(grunt) {
         if (!log.sameValuesInFile.length && !log.sameValuesInSeparateFilesFile.length) {
             grunt.log.ok("all done")
         } else {
-            grunt.fail.fatal("fail")
+            grunt.fail.fatal("fail: exist same values")
         }
 
 
