@@ -1,0 +1,41 @@
+{
+  "name": "requirejs-i18-duplications-checker",
+  "description": "plugin for checking on duplicated values in i18 resources files using require.js",
+  "version": "0.0.1",
+  "homepage": "https://github.com/jsruvi/requirejs-i18-duplications-checker",
+  "author": {
+    "name": "Rumyancev Vitalik",
+    "email": "ruviverstka@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jsruvi/requirejs-i18-duplications-checker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jsruvi/requirejs-i18-duplications-checker/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/jsruvi/requirejs-i18-duplications-checker/blob/master/LICENSE-MIT"
+    }
+  ],
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "devDependencies": {
+    "grunt-contrib-jshint": "^0.9.2",
+    "grunt-contrib-clean": "^0.5.0",
+    "grunt-contrib-nodeunit": "^0.3.3",
+    "grunt": "~0.4.5"
+  },
+  "peerDependencies": {
+    "grunt": "~0.4.5"
+  },
+  "keywords": [
+    "gruntplugin"
+  ]
+}
