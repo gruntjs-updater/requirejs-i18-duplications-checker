@@ -69,6 +69,7 @@ module.exports = function(grunt) {
         function iterateGroupFilesResults(groupFilesData, checkValuesOption, log) {
 
             var count = 0;
+            var valueDuplicatedInOtherFiles = [];
 
             groupFilesData.forEach(function(fileData) {
 
@@ -116,7 +117,12 @@ module.exports = function(grunt) {
                         log.sameValuesInFile.push(error);
                     }
 
-                    if (checkValuesOption === "all") {
+                    var isAlreadyCheckedOnDuplicateValue = valueDuplicatedInOtherFiles.indexOf(originFileResult[mainIteratedKey]) > -1;
+
+                    if (checkValuesOption === "all" && !isAlreadyCheckedOnDuplicateValue) {
+
+                        valueDuplicatedInOtherFiles.push(originFileResult[mainIteratedKey]);
+
                         var sameValuesInSeparateFiles = getSameValueFromSeparateFiles(groupFilesData, fileData, mainIteratedKey, count);
 
                         if (sameValuesInSeparateFiles) {
@@ -217,10 +223,14 @@ module.exports = function(grunt) {
                 grunt.log.writeln("in file: " + error.filePath);
                 grunt.log.writeln("key: " + "'" + error.currentKey + "'");
                 grunt.log.writeln("contain same value: " + "'" + error.sameValue + "'");
-                error.filesThatContainSameValue.forEach(function(error) {
-                    grunt.log.writeln("found in file: '" + error.path + "'");
-                    grunt.log.writeln("in key: '" + error.key + "'");
-                });
+
+                for (var i = 0, l = error.filesThatContainSameValue.length; i < l; i++) {
+                    var fileWithSameValue = error.filesThatContainSameValue[i];
+                    grunt.log.writeln("-----");
+                    grunt.log.writeln("found in file: '" + fileWithSameValue.path + "'");
+                    grunt.log.writeln("in key: '" + fileWithSameValue.key + "'");
+                }
+
                 grunt.log.writeln("--------------------");
                 grunt.log.writeln("");
                 grunt.log.writeln("");
