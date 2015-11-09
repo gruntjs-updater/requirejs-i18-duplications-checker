@@ -25,7 +25,7 @@ module.exports = function(grunt) {
     grunt.registerMultiTask('requirejs_i18_duplications_checker', 'plugin for checking duplicated values in i18 resources files using require.js', function() {
 
         var config        = grunt.config(this.name),
-            groups        = config.groups,
+            groups        = config.groups || [],
             log           = {
                 sameValuesInFile: [],
                 sameValuesInSeparateFiles: []
@@ -57,7 +57,7 @@ module.exports = function(grunt) {
 
             groupsResults.forEach(function(groupResult) {
 
-                var checkValuesOption  = groupResult.checkValues,
+                var checkValuesOption  = groupResult.checkValues || true,
                     groupFilesData = [].concat(groupResult.groupFilesData);
 
                 if (checkValuesOption) {
