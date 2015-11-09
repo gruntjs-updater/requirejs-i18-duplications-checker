@@ -53,8 +53,8 @@ A string or array thar specify path(s) to file(s) that should be checked on dupl
 Type: `String || Boolean`
 Default value: `true`
 
-Taken values:
-true - check duplicated values only inside each specified files but not between each other
+Taken values:\n
+true - check duplicated values only inside each specified files but not between each other,\n
 "all" - check duplicated values inside each specified files and between each other
 
 ### Usage Examples
