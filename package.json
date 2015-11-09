@@ -1,7 +1,7 @@
 {
   "name": "requirejs-i18-duplications-checker",
   "description": "plugin for checking on duplicated values in i18 resources files using require.js",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "homepage": "https://github.com/jsruvi/requirejs-i18-duplications-checker",
   "author": {
     "name": "Rumyancev Vitalik",
