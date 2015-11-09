@@ -10,8 +10,6 @@
 
 module.exports = function(grunt) {
 
-    // Please see the Grunt documentation for more information regarding task
-    // creation: http://gruntjs.com/creating-tasks
     /**
      * options in gruntfile should have such view
      * onlyUnique: {
@@ -24,75 +22,24 @@ module.exports = function(grunt) {
      *  }
      */
 
-    grunt.registerMultiTask('requirejs_i18_duplications_checker', 'plugin for checking on duplicated values in i18 resources files using require.js', function() {
+    grunt.registerMultiTask('requirejs_i18_duplications_checker', 'plugin for checking duplicated values in i18 resources files using require.js', function() {
 
         var config        = grunt.config(this.name),
             groups        = config.groups,
-            groupsResults = getGroupsResults(groups),
             log           = {
                 sameValuesInFile: [],
                 sameValuesInSeparateFiles: []
             };
 
-        groupsResults.forEach(function(groupResult) {
-            var checkValues  = groupResult.checkValues,
-                filesResults = [].concat(groupResult.filesResults);
+        fillErrorLog(log, groups);
 
-            if (checkValues) {
-                var count = 0;
+        if(log.sameValuesInFile.length){
+            logDuplicatedValuesInFile(log.sameValuesInFile);
+        }
 
-                filesResults.forEach(function(fileResult) {
-                    if (!grunt.file.exists(fileResult.fileName)) {
-                        return;
-                    }
-
-                    var result      = fileResult.result;
-                    var usedKeys    = [];
-                    var checkedKeys = [];
-
-                    for (var i in result) {
-                        if (checkedKeys.indexOf(i) !== -1) {
-                            continue;
-                        }
-
-                        var error       = {
-                                currentKey: i,
-                                filePath: fileResult.fileName,
-                                sameValue: result[i],
-                                keyThatContainSameValue: []
-                            },
-                            errorsCount = 0;
-
-                        usedKeys.push(i);
-
-                        for (var j in result) {
-                            if ((usedKeys.indexOf(j) === -1) && (result[i] === result[j])) {
-                                error.keyThatContainSameValue.push(j);
-                                checkedKeys.push(j);
-                                ++errorsCount;
-                            }
-                        }
-
-                        if (errorsCount) {
-                            log.sameValuesInFile.push(error);
-                        }
-
-                        if (checkValues === "all") {
-                            var sameValuesInSeparateFiles = getSameValueFromSeparateFiles(filesResults, fileResult, result, i, count);
-
-                            if (sameValuesInSeparateFiles) {
-                                log.sameValuesInSeparateFiles.push(sameValuesInSeparateFiles);
-                            }
-                        }
-                    }
-
-                    count++;
-                });
-            }
-        });
-
-        logDuplicatedValuesInFile(log.sameValuesInFile);
-        logDuplicatedValuesInSeparateFiles(log.sameValuesInSeparateFiles);
+        if(log.sameValuesInSeparateFiles.length){
+            logDuplicatedValuesInSeparateFiles(log.sameValuesInSeparateFiles);
+        }
 
         if (!log.sameValuesInFile.length && !log.sameValuesInSeparateFilesFile.length) {
             grunt.log.ok("all done")
@@ -101,24 +48,104 @@ module.exports = function(grunt) {
         }
 
 
+
+
+
+        function fillErrorLog(log, groups) {
+
+            var groupsResults = getGroupsResults(groups);
+
+            groupsResults.forEach(function(groupResult) {
+
+                var checkValuesOption  = groupResult.checkValues,
+                    groupFilesData = [].concat(groupResult.groupFilesData);
+
+                if (checkValuesOption) {
+                    iterateGroupFilesResults(groupFilesData, checkValuesOption, log);
+                }
+            });
+        }
+
+        function iterateGroupFilesResults(groupFilesData, checkValuesOption, log) {
+
+            var count = 0;
+
+            groupFilesData.forEach(function(fileData) {
+
+                if (!grunt.file.exists(fileData.fileName)) { return; }
+
+                var originFileResult = fileData.originResult;
+
+                var iteratedKeys = [];
+                var keysHaveSameValue = [];
+
+                for (var mainIteratedKey in  originFileResult) {
+
+                    if (!originFileResult.hasOwnProperty(mainIteratedKey)) { continue; }
+
+                    var isMainKeyAlreadyChecked = keysHaveSameValue.indexOf(mainIteratedKey) > -1;
+                    if (isMainKeyAlreadyChecked) { continue; }
+
+                    iteratedKeys.push(mainIteratedKey);
+
+                    var error = {
+                            currentKey: mainIteratedKey,
+                            filePath: fileData.fileName,
+                            sameValue:  originFileResult[mainIteratedKey],
+                            keyThatContainSameValue: []
+                        },
+                        errorsCount = 0;
+
+                    for (var secondaryIteratedKey in originFileResult) {
+
+                        if (!originFileResult.hasOwnProperty(secondaryIteratedKey)) { continue; }
+
+                        var isSecondaryKeyAlreadyChecked = iteratedKeys.indexOf(secondaryIteratedKey) > -1;
+                        if (isSecondaryKeyAlreadyChecked) { continue; }
+
+                        var isSecondaryKeyHasSameValueAsMainKey = originFileResult[mainIteratedKey] === originFileResult[secondaryIteratedKey];
+
+                        if (isSecondaryKeyHasSameValueAsMainKey) {
+                            error.keyThatContainSameValue.push(secondaryIteratedKey);
+                            keysHaveSameValue.push(secondaryIteratedKey);
+                            ++errorsCount;
+                        }
+                    }
+
+                    if (errorsCount) {
+                        log.sameValuesInFile.push(error);
+                    }
+
+                    if (checkValuesOption === "all") {
+                        var sameValuesInSeparateFiles = getSameValueFromSeparateFiles(groupFilesData, fileData, mainIteratedKey, count);
+
+                        if (sameValuesInSeparateFiles) {
+                            log.sameValuesInSeparateFiles.push(sameValuesInSeparateFiles);
+                        }
+                    }
+                }
+
+                count++;
+            });
+        }
+
         function getGroupsResults(groups) {
             var results = [];
 
             groups.forEach(function(group) {
                 var paths        = [].concat(group.paths);
-                var filesResults = [];
+                var groupFilesData = [];
 
                 grunt.file.expand({}, paths).forEach(function(path) {
-                    var define      = function(val) {
-                        return val;
-                    };
+                    var define = function(val) { return val; };
+
                     var fileContent = grunt.file.read(path);
                     var fileResult  = eval(fileContent);
 
                     if (isObject(fileResult) && !isEmptyObject(fileResult)) {
-                        filesResults.push({
+                        groupFilesData.push({
                             fileName: path,
-                            result: fileResult,
+                            originResult: fileResult,
                             invertedResult: invertObject(fileResult)
                         });
                     }
@@ -126,47 +153,42 @@ module.exports = function(grunt) {
 
                 results.push({
                     checkValues: group.checkValues,
-                    filesResults: filesResults
+                    groupFilesData: groupFilesData
                 });
             });
 
             return results;
         }
 
-        function getSameValueFromSeparateFiles(filesResults, fileResult, currentResult, currentResultKey, count) {
-            var error                      = {
-                    filePath: fileResult.fileName,
-                    sameValue: currentResult[currentResultKey],
-                    currentKey: currentResultKey,
+        function getSameValueFromSeparateFiles(groupFilesData, fileData, mainIteratedKey, count) {
+
+            var foundValue = fileData.originResult[mainIteratedKey],
+                error = {
+                    filePath: fileData.fileName,
+                    sameValue: foundValue,
+                    currentKey: mainIteratedKey,
                     filesThatContainSameValue: []
-                },
-                sameValuesInSeparateFiles  = [],
-                errorsInSeparateFilesCount = 0;
+                };
 
-            for (var k = count + 1, l = filesResults.length; k < l; k++) {
-                var otherInvertedResult = filesResults[k].invertedResult;
+            for (var i = count + 1, l = groupFilesData.length; i < l; i++) {
+                var subsequentFileData = groupFilesData[i],
+                    otherFileInvertedResult = subsequentFileData.invertedResult,
+                    isDefaultResourceKey = mainIteratedKey === "root";
 
-                if (otherInvertedResult[currentResult[currentResultKey]] && currentResultKey !== "root") {
-                    errorsInSeparateFilesCount++;
+                if (otherFileInvertedResult[foundValue] && !isDefaultResourceKey) {
 
                     error.filesThatContainSameValue.push({
-                        path: filesResults[k].fileName,
-                        key: otherInvertedResult[currentResult[currentResultKey]]
+                        path: subsequentFileData.fileName,
+                        key: otherFileInvertedResult[foundValue]
                     });
                 }
             }
 
-            if (errorsInSeparateFilesCount) {
-                return error;
-            } else {
-                return false;
-            }
+            return error.filesThatContainSameValue.length && error;
         }
 
         function logDuplicatedValuesInFile(errors) {
-            if (!errors.length) {
-                return;
-            }
+            if (!errors.length) { return; }
 
             grunt.log.warn("matches in each files");
             grunt.log.warn("--------------------------");
@@ -185,9 +207,7 @@ module.exports = function(grunt) {
         }
 
         function logDuplicatedValuesInSeparateFiles(errors) {
-            if (!errors.length) {
-                return;
-            }
+            if (!errors.length) { return; }
 
             grunt.log.warn("matches with other files");
             grunt.log.warn("-----------------------");
