@@ -1,7 +1,7 @@
 {
   "name": "requirejs-i18-duplications-checker",
   "description": "grunt plugin for checking on duplicated values in i18 resources files when you use require.js",
-  "version": "0.0.43",
+  "version": "0.0.44",
   "homepage": "https://github.com/jsruvi/requirejs-i18-duplications-checker",
   "author": {
     "name": "Rumyancev Vitalik",
